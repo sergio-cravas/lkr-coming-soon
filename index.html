@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Little Knight Realms — Coming Soon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      background: #1a4a4a;
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    canvas#game {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    #branding {
+      position: fixed;
+      top: 33%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #branding h1 {
+      color: #ffffff;
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(14px, 2.5vw, 32px);
+      line-height: 1.8;
+      text-shadow: 3px 3px 0 #1a4a4a;
+      margin-bottom: 24px;
+    }
+
+    #branding p {
+      color: #ffe066;
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(8px, 1.2vw, 16px);
+      text-shadow: 3px 3px 0 #1a4a4a;
+      animation: blink 1.2s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="branding">
+    <h1>LITTLE KNIGHT<br>REALMS</h1>
+    <p>COMING SOON</p>
+  </div>
+
+  <script type="module" src="src/game.js"></script>
+</body>
+</html>
