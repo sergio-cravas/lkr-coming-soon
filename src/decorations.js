@@ -13,15 +13,17 @@ const SHEEP_SPEED          = 0.3;
 const MAX_DRIFT            = 0.35;
 
 const TREE_DEFS = [
-  { col: 2, row: 1, type: 'tree1' },  // vecinos: NW/N/NE en fila 0 — seguros
-  { col: 3, row: 1, type: 'tree1' },  // vecinos: N/NE en fila 0 — seguros
-  { col: 1, row: 2, type: 'tree3' },
-  { col: 2, row: 3, type: 'tree1' },  // vecinos: solo tiles C — 100% seguro
-  { col: 3, row: 3, type: 'tree3' },  // 96px, solo 16px sobre el tile SE border
+  { col: 2, row: 1, type: 'tree1' },
+  { col: 3, row: 0, type: 'tree1' },  
+  { col: 4, row: 1, type: 'tree1' },  
+  { col: 5, row: 1, type: 'tree3' },
+  { col: 3, row: 2, type: 'tree3' },
+  { col: 5, row: 2, type: 'tree1' },  
+  { col: 4, row: 3, type: 'tree3' },  
 ];
 
 const SHEEP_DEFS = [
-  { col: 3, row: 2 },
+  { col: 3, row: 3 },
   { col: 1, row: 3 },
 ];
 
@@ -80,6 +82,10 @@ export function updateDecorations({ sheep }, dt) {
   }
 }
 
+// tree1 frame 0 has a detached sapling fragment at source cols 230-255;
+// clip to col 230 to exclude it while preserving the main tree body.
+const TREE1_CLIP_SRC_X = 230;
+
 function drawTree(ctx, tree, imgs, tileSize, offsetX, offsetY) {
   const isLarge    = tree.type === 'tree1';
   const img        = isLarge ? imgs.tree1 : imgs.tree3;
@@ -89,7 +95,17 @@ function drawTree(ctx, tree, imgs, tileSize, offsetX, offsetY) {
   const px = Math.round(offsetX + tree.col * tileSize + tileSize / 2 - displaySize / 2);
   const py = Math.round(offsetY + (tree.row + 1) * tileSize - displaySize);
 
-  ctx.drawImage(img, 0, 0, frameSize, frameSize, px, py, displaySize, displaySize);
+  if (isLarge) {
+    const clipW = Math.round(TREE1_CLIP_SRC_X * displaySize / frameSize);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(px, py, clipW, displaySize);
+    ctx.clip();
+    ctx.drawImage(img, 0, 0, frameSize, frameSize, px, py, displaySize, displaySize);
+    ctx.restore();
+  } else {
+    ctx.drawImage(img, 0, 0, frameSize, frameSize, px, py, displaySize, displaySize);
+  }
 }
 
 function drawSheep(ctx, s, imgs, tileSize, offsetX, offsetY) {
