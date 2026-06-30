@@ -3,11 +3,12 @@
 
 import { renderIsland, COLS, ROWS } from './island.js';
 import { createKnight, updateKnight, renderKnight } from './knight.js';
+import { createDecorations, updateDecorations, decorationDrawCalls } from './decorations.js';
 
 const canvas = document.getElementById('game');
 let ctx;
 
-const TILE_SIZE = 64; // CSS pixels per tile
+const MAX_TILE_SIZE = 64; // CSS pixels per tile — shrinks on narrow screens
 
 // ---------------------------------------------------------------------------
 // Canvas setup with HiDPI support
@@ -97,16 +98,17 @@ function drawClouds() {
 }
 
 // ---------------------------------------------------------------------------
-// Island — centered on canvas, vertically offset slightly above center
+// Island — responsive tile size + centered on canvas
 // ---------------------------------------------------------------------------
-function islandOffset() {
-  // Island grass area: COLS × TILE_SIZE wide, ROWS × TILE_SIZE tall
-  // Plus 2 cliff rows below — shift the island up so the cliff hangs below center
-  const islandW = COLS * TILE_SIZE;
-  const islandH = ROWS * TILE_SIZE;
+function getLayout() {
+  const H_MARGIN = 48; // minimum water visible on each side (px)
+  const tileSize = Math.min(MAX_TILE_SIZE, Math.floor((window.innerWidth - H_MARGIN * 2) / COLS));
+  const islandW  = COLS * tileSize;
+  const islandH  = ROWS * tileSize;
   return {
+    tileSize,
     offsetX: Math.round((window.innerWidth  - islandW) / 2),
-    offsetY: Math.round((window.innerHeight - islandH) / 2 - TILE_SIZE),
+    offsetY: Math.round((window.innerHeight - islandH) / 2 - tileSize),
   };
 }
 
@@ -116,11 +118,20 @@ function islandOffset() {
 async function init() {
   setupCanvas();
 
-  const [waterImg, tileset, warriorIdle, warriorRun, ...cloudImgs] = await Promise.all([
+  const [
+    waterImg, tileset,
+    warriorIdle, warriorRun,
+    tree1Img, tree3Img, sheepIdleImg, sheepMoveImg,
+    ...cloudImgs
+  ] = await Promise.all([
     loadImage('assets/water_bg.png'),
     loadImage('assets/tileset.png'),
     loadImage('assets/warrior_idle.png'),
     loadImage('assets/warrior_run.png'),
+    loadImage('assets/tree1.png'),
+    loadImage('assets/tree3.png'),
+    loadImage('assets/sheep_idle.png'),
+    loadImage('assets/sheep_move.png'),
     loadImage('assets/cloud_01.png'),
     loadImage('assets/cloud_02.png'),
     loadImage('assets/cloud_03.png'),
@@ -128,8 +139,11 @@ async function init() {
     loadImage('assets/cloud_05.png'),
   ]);
 
+  const decImgs = { tree1: tree1Img, tree3: tree3Img, sheepIdle: sheepIdleImg, sheepMove: sheepMoveImg };
+
   initClouds(cloudImgs);
-  const knight = createKnight(2, 2);
+  const knight      = createKnight(2, 2);
+  const decorations = createDecorations();
 
   let lastTs = null;
 
@@ -141,11 +155,20 @@ async function init() {
 
     drawWater(waterImg);
 
-    const { offsetX, offsetY } = islandOffset();
-    renderIsland(ctx, tileset, TILE_SIZE, offsetX, offsetY);
+    const { tileSize, offsetX, offsetY } = getLayout();
+    renderIsland(ctx, tileset, tileSize, offsetX, offsetY);
 
+    updateDecorations(decorations, dt);
     updateKnight(knight, dt, keys);
-    renderKnight(ctx, knight, warriorIdle, warriorRun, TILE_SIZE, offsetX, offsetY);
+
+    // Y-sort: trees, sheep, and knight drawn back-to-front
+    const drawCalls = decorationDrawCalls(decorations, decImgs, tileSize, offsetX, offsetY);
+    drawCalls.push({
+      tileY: knight.tileY,
+      draw:  (ctx) => renderKnight(ctx, knight, warriorIdle, warriorRun, tileSize, offsetX, offsetY),
+    });
+    drawCalls.sort((a, b) => a.tileY - b.tileY);
+    for (const call of drawCalls) call.draw(ctx);
 
     updateClouds(dt);
     drawClouds();
