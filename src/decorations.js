@@ -13,11 +13,11 @@ const SHEEP_SPEED          = 0.3;
 const MAX_DRIFT            = 0.35;
 
 const TREE_DEFS = [
-  { col: 2, row: 1, type: 'tree1' },
-  { col: 4, row: 1, type: 'tree1' },
-  { col: 3, row: 1, type: 'tree3' },
+  { col: 2, row: 1, type: 'tree1' },  // vecinos: NW/N/NE en fila 0 — seguros
+  { col: 3, row: 1, type: 'tree1' },  // vecinos: N/NE en fila 0 — seguros
   { col: 1, row: 2, type: 'tree3' },
-  { col: 2, row: 3, type: 'tree3' },
+  { col: 2, row: 3, type: 'tree1' },  // vecinos: solo tiles C — 100% seguro
+  { col: 3, row: 3, type: 'tree3' },  // 96px, solo 16px sobre el tile SE border
 ];
 
 const SHEEP_DEFS = [
